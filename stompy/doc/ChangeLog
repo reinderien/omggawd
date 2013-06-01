@@ -1,0 +1,27 @@
+Version 0.04:
+------------
+
+  - Added more explicit explanations of certain results,
+  - Added fault bitmap reporting,
+  - Emphasized the ability to use stompy for non-WWW applications,
+  - Added raw file support,
+  - Replaced environmental variables with command-line options,
+  - Dropped non-GMP compilation target.
+  - Added the ability to issue custom requests from file,
+  - Added spatial correlation detection,
+  - Added SSL support,
+  - Moved testcases to test/
+  - [BUG] Fixed transition checking
+  - [BUG] Fixed some variable token length testing bugs
+  - [BUG] Fixed minor reporting errors
+  - [BUG] Fixed a problem with SEGV on replay on some platforms
+
+Version 0.02:
+------------
+
+  - Added GNU MP support for non 2^n alphabets + STOMPY_NOGMP
+  - Added replay functionality
+  - Added copying output to *.out file
+  - Reworked README
+  - Added more explicit requests to replay data
+

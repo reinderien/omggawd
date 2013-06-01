@@ -1,0 +1,22 @@
+These are test generators for testing stompy. Try 'make test' to
+generate *.out files that are then fed to ../stompy -R. The
+following PRNGs are currently evaluated:
+
+  - lcg-rand  - a vulnerable standard C library LCG (rand()) that
+                should fail the tests; note that on most modern
+                GNU lib versions, this might be aliased to LFSR.
+
+  - lfsr-rand - linear feedback shift register, very good
+                properties, but susceptible to cryptanalysis 
+                (passes for now, shouldn't in the future).
+
+  - mtwister  - Mersenne Twister, a competent but not necessarily
+                cryptographically secure generator that has a
+                high order of dimensional equidistribution (should
+                pass),
+
+  - urandom   - a cryptographically secure MD5-based PRNG on Linux
+                (or Schneier's Yarrow on FreeBSD) - should pass.
+
+
+

@@ -1,0 +1,306 @@
+
+Stompy the Session Stomper
+==========================
+
+Version 0.04
+
+Copyright (C) 2007 by Michal Zalewski <lcamtuf@coredump.cx>
+
+What is this?
+-------------
+
+Stompy is a free tool to perform black-box assessment of algorithms used to
+generate WWW session identifiers or other tokens that are meant to withstand 
+statistical analysis and brute-force attacks.
+ 
+Session IDs and similar secret values shared between client and server are 
+commonly used to track authenticated users or validate certain actions in
+stateless environments (not limited to the Internet: prepaid mobile recharge
+vouchers are a good example), and as such, whenever they're predictable or 
+simply have a non-negligible chance of being guessed by trial and error, we 
+do have a problem.
+
+Some of such mechanisms, particularly in relation to the Web, are well-studied
+and well-documented, and believed to be cryptographically secure (for example:
+Apache Tomcat, PHP, ASP.NET built-in session identifiers). This is not
+necessarily so for various less-researcher enterprise platforms, and almost
+never so for custom solutions implemented in-house for a particular 
+application. This is no better for other types of closed-source token
+generation systems that need to be quickly assessed for most obvious 
+vulnerabilities before deployment.
+
+Yet, while there are several nice GUI-based tools designed to, for example,
+analyze HTTP cookies for common problems (Dawes' WebScarab, SPI Cookie Cruncher,
+Foundstone CookieDigger, etc), they all seem to rely on very trivial, if any, 
+tests when it comes to unpredictability ("alphabet distribution" or "average bits 
+changed" are top shelf); this functionality is often not better than a quick 
+pen-and-paper analysis, and can't be routinely used to tell a highly vulnerable
+linear congruent PRNG (rand())  from a well-implemented MD5 hash system 
+(/dev/urandom). 
+
+Today's super-bored pen-testers can perhaps collect data by hand, determine its
+encoding, write conversion scripts, and then run it through NIST Statistical
+Test Suite or a similar tool - but few will, and few can afford to.
+
+THERE IS NO TOOL THAT CAN PROVE, BASED ON OBSERVED DATA ALONE, THAT A GIVEN
+SESSION TOKEN GENERATION ALGORITHM IS SAFE. Just because some implementation 
+passes the tests performed by stompy, it is not magically made secure. Tools
+can merely demonstrate that something is wrong - but not prove that everything
+is fine.
+
+What's so cool about stompy?
+----------------------------
+
+Stompy aims to be a quick and mostly automated tool to provide a first line of
+assessment and reliably detect common anomalies that are not readily apparent
+at a cursory glance. 
+
+To achieve this, it:
+
+  - Automatically detects session IDs encoded as URLs, cookies, as well as as
+    form inputs, then collects a statistially significant sample of data 
+    without any user interaction (but can also accept preformated data from
+    external sources),
+
+  - Automatically determines alphabet structure to transparently handle base64, 
+    uuencode, base32, decimal, hex, or any other sane encoding scheme, including 
+    mixed encodings. What's big is that it can handle fractional-bit alphabets
+    (ones that do not consist of power-of-2 elements), which normally cannot be
+    directly mapped to binary,
+
+  - After carrying out a couple of trivial alphabet-based tests, stompy then 
+    splits the samples into temporally separated bitstreams (stream 1: bit 0 of
+    sample 1, bit 0 of sample 2, bit 0 of sample 3...; stream 2: bit 1 of 
+    sample 1, bit 1 of sample 2, bit...) to individually evaluate how bits change
+    in time, and how much entropy they contribute to the identifier.
+
+  - To detect weaknesses in each of the bitstreams, the tool launches NIST 
+    FIPS-140-2 PRNG evaluation tests on the collected data, as well as a bunch of 
+    n-dimensional phase analysis attempts (spectral tests) aimed to find PRNG 
+    hyperplanes and other types of non-trivial data correlation.
+   
+  - Lastly, the tool performs series of spatial correlation checks to identify
+    dependencies between neighboring bits in each of the tokens,
+
+  - A final report on the number of correct and anomalous bits is then prepared,
+    and an estimate on the number of "untainted" entropy is assigned a
+    human-readable rating.
+
+How to run stompy?
+------------------
+
+To compile the program, simply issue 'make' ('make install' to put stompy in
+/usr/bin). You will need GNU MP (libgmp) library and development headers,
+version 4.1 or newer; older versions will not work. If you get 'mpz_addmul_ui' 
+related errors, yes, you need to upgrade this library. You will also need 
+OpenSSL library and headers, any version will do (but keep in mind that
+various security vulnerabilities were found in versions prior to 0.9.8d).
+
+To run the program against a website, you can invoke it this way:
+
+  ./stompy http://www.example.com/abc/123
+
+...or...
+
+  ./stompy https://www.example.com:8888/abc/123?foo=bar
+
+To test a text file that contains raw tokens obtained by some other means
+(one per line), do this:
+
+  ./stompy -R file.txt
+
+Tokens should have no more than 100 characters. Testing of non-ASCII raw 
+binary tokens is not supported as-is, but if needed, simply encode them 
+using base64, base32, or hexadecimal notation ('od' or 'hexdump' utility
+supplied with your operating system will come handy).
+
+In WWW mode, stompy saves all captured session IDs as evidence in
+stompy-$date.dat, and stores a copy of the analysis report in stompy-$date.log.
+You can change these locations with -e and -o command-line options, 
+respectively.
+
+Note that the tool produces a shorter version of the report on stdout, 
+displaying at most 10 problems detected within a single test. The logfile saved
+to disk always contains complete data, and an additional alphabet dump.
+
+If you need to re-test a previously captured .dat file, invoke stompy the
+following way:
+
+  ./stompy -A file.dat
+
+No new .dat file will be generated.
+
+Stompy by itself issues vanilla GET requests. In some cases, it is desirable to
+test the quality of login tokens that are issued only after a POST request. In
+such a case, stompy can be asked to read the request to be sent to the server
+from an external file:
+
+  ./stompy -p request.txt http://www.example.com/
+
+You need to make sure that the data is well-formed and valid. If you're 
+preparing a HTTP/1.1 request, remember to add "Connection: close" to the
+headers, or else stompy may stall waiting for the server to close the
+connection. Don't forget the closing \r\n\r\n, or else nothing will happen.
+
+The last option offered by stompy needs to be used with caution: -g inhibits
+the use of libgmp for reconstruction of data represented using fractiona-bit
+alphabets that do not map directly to binary. For common encodings such as
+base64, base32, or hex, this will have no effect other than a minor performance
+improvement. For encodings such as base10, it will cause much of the data to be 
+ignored, and the rest to exhibit a false bias where no statistical bias exists 
+natively. HOWEVER, when a weird alphabet results out of extreme PRNG issues,
+not an intentional design (e.g., the author wanted to use base32, but his PRNG
+is so flawed it only goes from 0 to 20 for character #15), -g may provide
+better results, as stompy won't attempt to be smarter than necessary. Again, use 
+only when you have all reasons to believe that the underlying alphabet was meant
+to have power-of-2 elements - and if you see a bit-level anomaly map that looks
+like this: '!!.!!.!!.!!.!!.!!. (...)' - you were quite likely wrong.
+
+What are the gotchas?
+---------------------
+
+Although I wanted to make the tool run as hands-free as possible, there are
+some scenarios where it may produce suboptimal results. You need to be able
+to recognize these situations and correct them:
+
+  - In some rare cases, the captured tokens will have variable length.
+    This might be because an irrelevant blob of data (such as cluster 
+    node identifier) is prepended or appended to the main identifier,
+    or because a numerical identifier is not 0-padded itself. Stompy will
+    always align all tokens to the left, and will add a new alphabet
+    element to denote the occassional "no character" at rightmost positions;
+    this is not always perfect. Consider the following scenarios:
+
+    SID = <deterministic, variable length> | <indeterministic, fixed length>
+ 
+      Here, the entropy of the indeterministic part will be underestimated,
+      because a deterministic part will periodically intrude its bitspace
+      and introduce irregularities
+
+    SID = <indeterministic, fixed lenght> | <deterministic, variable length>
+
+      Here, however, no such side effects will occur.
+
+    SID = <inteterministic, variable length number>
+
+      To preserve their properties, numbers should be 0-padded and aligned
+      right. Here, false abnormalities will be detected because of incorrect
+      alignment and the introduction of 0x00 alphabet element.
+
+    ...and so on. In general, it is remarkably easy for a human to spot
+    whenever a token consists of several separate parts, or where 
+    variable-length numbers are used. Stompy will always warn you of session
+    identifiers that change length during testing, but it is up to you to
+    visually examine them, eventually run a trivial cut/awk/perl script to
+    properly isolate, pad, and align the relevant part, then re-run stompy
+    on the corrected dataset.
+
+  - Speaking of clusters and load balancers: you usually want to test a 
+    single system and a single PRNG, but a cummulative blob of unknown
+    properties. Avoid situations where stompy may have to speak to multiple
+    systems at once, and if this is a necessity, expect results to appear 
+    more random than the reality might be.
+
+Other than that, be warned: to obtain a statistically meaningful sample, 
+a total of 20,000 requests is issued. Depending on the target, this might 
+be time-consuming (or simply not welcome). Try to remember that when testing 
+sites without owner's consent (by the way: you shouldn't).
+
+How to read the results?
+------------------------
+
+Stompy analyzes the structure of the identifier, ignoring constant parts
+altogether, and first estimating the hypothetical maximum entropy the
+token may have, based on the observed alphabets for each character. This
+is your first clue: if it's too low, any further testing amounts to 
+kicking a dead man.
+
+Following this, the tool performs some initial tests on each of the 
+identifiers on character-level, in order to provide an intuitive detection 
+of very trivial flaws (such as that '0' occurs far too rarely, or that
+a transition from '0' to '5' is far more common than others - which of
+course makes guessing the values easier); it then proceeds with a more
+sophisticated evaluation of individual bits. 
+
+Whenever a character or a bit significantly deviates from what perfect
+randomness should look like in terms of statistical properties and
+probabilities, this character or bit is tagged as anomalous. This does not
+automatically mean that it is fully predictable - but quite certainly, 
+something is fishy.
+
+NIST FIPS-140-2 tests are meant to detect common flaws in binary 
+pseudorandom number generators, and inform the tester that the data
+exhibits certain statistical flaws, such as an unusual disproportion
+in the number of 0s and 1s, runs of 0s or 1s are too long or too
+common / too rare, etc. Many trivial PRNGs fail these tests.
+
+Spectral tests look at non-obvious dependency between previous
+values of a bit or a group of bits, and the current state. If, instead
+of dispersing evenly, reconstructed n-dimensional data forms clusters
+of higher and lower datapoint density, a statistical correlation exists.
+This can be used to attack PRNGs in a manner similar to what I described
+in my TCP/IP ISN research a while ago.
+
+Finally, spatial correlation tests look whether the value of two 
+arbitrarily chosen bits is in any way related: if they change independently,
+there is no correlation; if one is set more frequently when the other is
+also set, a positive correlation is reported and its strength assessed.
+Likewise, if one is zeroed more often when the other is set - a negative
+correlation must exist.
+
+Well, that's it on the tests. The final lines of the report will tell you 
+how many bits are "tainted" - that is, failed some or all of the tests - and 
+how many can be trusted to provide truly unpredictable data, along with a 
+descriptive rating of how susceptible to attacks relying only on them would
+be:
+
+RESULTS SUMMARY:
+  Alphabet-level : 32 anomalous bits, 10 OK (very trivial!).
+  Bit-level      : 37 anomalous bits, 5 OK (very trivial!).
+
+ANOMALY MAP:
+  Alphabet-level : oo....!!!!!!..!!.. (...)
+  Bit-level      : .................. (...)
+
+The anomaly map provides a detailed layout of vulnerable and correct
+bits and characters in the token ('o' - fixed value; '.' - proper
+entropy; '!' - tainted entropy).
+
+By looking at how far off test results are from the margins of acceptance,
+and how many tests this particular bit fails, you can see how severe the problem
+is. Additionally, for phase space analysis tests and spatial correlation checks,
+stompy attempts to estimate the loss of entropy encountered, and will report it 
+immediately under the results for that particular test, in the middle of the 
+report. In any case, even a subtle but unexplained discrepancy in data that is 
+supposed to be random should be investigated, as it might indicate a problem 
+with the underlying algorithm.
+
+Naturally, there are some situations where you shouldn't jump to conclusions:
+
+  - Parts of the identifier might be non-random by a sane design decision;
+    for example, ASP.NET session IDs have a deterministic beginning that
+    encodes process ID, and a sufficiently random "tail" that passes all
+    tests. If the remaining number of non-anomalous bits is sufficient
+    (gets a satisfactory rating from stompy), always consider that option
+    and check for it before raising a flag (anomaly map will be helpful).
+
+  - There might be a slight statistical bias in otherwise unpredictable 
+    identifiers resulting of an encoding scheme incompatible with stompy.
+    Unusual alphabets and evident, repetitive patterns of anomalous bits that 
+    fail the tests only slightly should alert you to that option.
+
+  - Blind luck: randomness is unpredictable. It is unlikely for a test
+    to fail spontaneously on random data, but it is not impossible.
+    When you get a single failed test that goes away later on, don't panic.
+
+In any case, as mentioned above, stompy stores all captured data in a 
+separate file. You can feed this raw capture to NIST STS or any other tool
+of your choice. The rule is: make sure you understand what's wrong before
+you alert others.
+
+I hate you! PS. This sucks!
+---------------------------
+
+These are normal feelings, don't be embarassed; feel free to drop me
+a line or two - the address is: Michal Zalewski <lcamtuf@coredump.cx>.
+

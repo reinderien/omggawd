@@ -1,0 +1,9 @@
+Add more tests to detect some LFSRs:
+
+  - Birthday spacing
+  - Minimum distance
+  - Matrix ranks
+  - Chi-square
+
+...other DIEHARD / random.zip tests
+
