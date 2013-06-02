@@ -6,12 +6,11 @@
 #
 
 CC      = gcc
-STRIP   = strip
-CFLAGS  = -ffast-math -O3 -Wall -fomit-frame-pointer -funroll-loops
+CFLAGS  = -ffast-math -O3 -Wall -fomit-frame-pointer -funroll-loops -s -march=native
 LIBS    = -lm -lgmp -lssl -lcrypto
 FILE	= stompy
 
-all: warning $(FILE) strip	
+all: warning $(FILE)
 
 warning:
 	@echo "Note: GNU MP library version 4.1 or newer is required. Older versions will not work."
@@ -19,13 +18,10 @@ warning:
 static: $(FILE)-static
 
 $(FILE): $(FILE).c
-	$(CC) $(CFLAGS) -o $@ $(FILE).c $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 $(FILE)-static: $(FILE).c 
-	$(CC) -static $(CFLAGS) -o $@ $(FILE).c $(LIBS)
-
-strip:
-	strip $(FILE) 2>/dev/null || true
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS) -static
 
 clean:
 	rm -f core core.[0123456789]* *~ *.o $(FILE) a.out $(FILE)-static stompy-*.dat stompy-*.out

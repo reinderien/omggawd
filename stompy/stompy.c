@@ -1492,6 +1492,7 @@ static void gather_data(_u8* hostname, _u32 addr, _u16 port, _u8* uri,_u8* fname
   st_t = time(0);
 
   for (i=1;i<=SAMPLESET;i++) {
+    if (cur_t - st_t > 0) {
       printf("\r[*] Sending request #%u (%0.02f%% done",i,i/(SAMPLESET / 100.0));
       if (i > 4) {
         _u32 eta = (cur_t - st_t) * (SAMPLESET - i) / (i-1) ;
@@ -1500,6 +1501,7 @@ static void gather_data(_u8* hostname, _u32 addr, _u16 port, _u8* uri,_u8* fname
       printf(")... ");
 
     fflush(0);
+    }
 
     rq = issue_request(hostname, addr, port, uri, req);
 

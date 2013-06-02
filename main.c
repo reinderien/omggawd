@@ -105,8 +105,10 @@ static bool getCode(int page, int pagesize, const char *tag) {
 	return true;
 }
 
+void stomp_everything();
+
 int main() {
-	curl = curl_easy_init();
+	/*curl = curl_easy_init();
 	assert(curl);
 	assert(!CURLERR(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writecurl)));
 	assert(!CURLERR(curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip")));
@@ -117,9 +119,11 @@ int main() {
 	for (int p = 1; getCode(p, 10, "c"); p++);
 	
 	json_tokener_free(jtok);
-	curl_easy_cleanup(curl);
+	curl_easy_cleanup(curl);*/
 	
 	// testall();
+	
+	stomp_everything();
 	
 	return 0;
 }

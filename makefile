@@ -1,5 +1,5 @@
-flags   = -Wall -std=c99 -O0 -ggdb
-#flags  = -Wall -std=c99 -O3 -march=native
+flags   = -Wall -std=c99 -D_GNU_SOURCE -O0 -ggdb
+#flags  = -Wall -std=c99 -D_GNU_SOURCE -O3 -march=native
 cflags  = $(flags) -c
 ldflags = $(flags) -lbrahe -lcurl -ljson
 
