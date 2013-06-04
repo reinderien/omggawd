@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <math.h>
+#include <regex.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -86,8 +87,8 @@ void test_fool()
 {
 	initTest();
 
-    unsigned run_count;
-    unsigned one_count;
+    unsigned run_count = 0;
+    unsigned one_count = 0;
 
 	for (int t = NTEST; t; t--)
 	{
@@ -121,8 +122,8 @@ void testall() {
 	test_fool();
 }
 
-void stomp_everything() {
-	; // 7 means 3 bits
+void b64_out() {
+	// 7 means 3 bits
 	int rbits = 0;
 	for (int rmax = RAND_MAX; rmax; rmax >>= 1)
 		rbits++;
@@ -147,4 +148,57 @@ void stomp_everything() {
 	}
 	
 	pclose(pin);
+}
+
+double stomp() {
+	regex_t rex;
+	assert(!regcomp(&rex, "level *: (.+) anomalous bits, (.+) OK",
+		REG_EXTENDED));
+		
+	int bad1 = -1, good1 = -1, bad2 = -1, good2 = -1;
+	
+	char line[1024];
+	
+	FILE *pout = popen("stompy/stompy -R will_be_stomped.txt", "r");
+	if (!pout) {
+		perror("No stomping :(");
+		return -1;
+	}
+	
+	while (fgets(line, sizeof(line), pout)) {
+		fputs(line, stdout);
+	
+		regmatch_t matches[3];
+		int result = regexec(&rex, line, 3, matches, 0);
+		
+		if (result == REG_NOERROR) {
+			line[matches[0].rm_eo] = '\0';
+			line[matches[1].rm_eo] = '\0';
+			int d1 = atoi(line + matches[1].rm_so),
+			    d2 = atoi(line + matches[2].rm_so);
+			if (bad1 == -1 && good1 == -1) {
+				bad1 = d1;
+				good1 = d2;
+			}
+			else {
+				bad2 = d1;
+				good2 = d2;
+				break;
+			}
+		}
+		else assert(result == REG_NOMATCH);
+	}
+	
+	pclose(pout);
+	
+	if (bad1 == -1 || bad2 == -1 || good1 == -1 || good2 == -1)
+		return -1;
+	return (good1 + good2) / (double)(good1 + good2 + bad1 + bad2);
+}
+
+void stomp_everything() {
+	b64_out();
+	double q = stomp();
+	
+	printf("Composite score: %.2lf%%\n", q*100);
 }
