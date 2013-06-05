@@ -123,7 +123,6 @@ void testall() {
 }
 
 void b64_out() {
-	// 7 means 3 bits
 	int rbits = 0;
 	for (int rmax = RAND_MAX; rmax; rmax >>= 1)
 		rbits++;
@@ -131,6 +130,7 @@ void b64_out() {
 
 	printf("RAND_MAX=0x%X (%d bits, %d bytes)\n", RAND_MAX, rbits, rbytes);
 	
+	// Call Gnu "base64" to put the data in stomp-able format
 	// wrap at 100 cols
 	FILE *pin = popen("base64 -w100 > will_be_stomped.txt", "w");
 	if (!pin) {
@@ -151,22 +151,25 @@ void b64_out() {
 }
 
 double stomp() {
+	// Regex to parse Stompy's entropy summary lines x2
 	regex_t rex;
 	assert(!regcomp(&rex, "level *: (.+) anomalous bits, (.+) OK",
 		REG_EXTENDED));
 		
-	int bad1 = -1, good1 = -1, bad2 = -1, good2 = -1;
+	int anom_alpha = -1, ok_alpha = -1, anom_bit = -1, ok_bit = -1;
 	
 	char line[1024];
 	
+	// Start Stompy and feed him some goodies
 	FILE *pout = popen("stompy/stompy -R will_be_stomped.txt", "r");
 	if (!pout) {
 		perror("No stomping :(");
 		return -1;
 	}
 	
+	// Read and re-display Stompy output while we look for the summary
 	while (fgets(line, sizeof(line), pout)) {
-		fputs(line, stdout);
+		printf("s:    %s", line);
 	
 		regmatch_t matches[3];
 		int result = regexec(&rex, line, 3, matches, 0);
@@ -176,13 +179,13 @@ double stomp() {
 			line[matches[1].rm_eo] = '\0';
 			int d1 = atoi(line + matches[1].rm_so),
 			    d2 = atoi(line + matches[2].rm_so);
-			if (bad1 == -1 && good1 == -1) {
-				bad1 = d1;
-				good1 = d2;
+			if (anom_alpha == -1 && ok_alpha == -1) {
+				anom_alpha = d1;
+				ok_alpha = d2;
 			}
 			else {
-				bad2 = d1;
-				good2 = d2;
+				anom_bit = d1;
+				ok_bit = d2;
 				break;
 			}
 		}
@@ -191,9 +194,13 @@ double stomp() {
 	
 	pclose(pout);
 	
-	if (bad1 == -1 || bad2 == -1 || good1 == -1 || good2 == -1)
+	if (anom_alpha == -1 || anom_bit == -1 || ok_alpha == -1 || ok_bit == -1)
 		return -1;
-	return (good1 + good2) / (double)(good1 + good2 + bad1 + bad2);
+	
+	// Form a composite entropy score based on Stompy's reported anomalous and
+	// OK bits on both the alphabet and bit levels
+	return (ok_alpha + ok_bit) /
+		(double)(ok_alpha + ok_bit + anom_alpha + anom_bit);
 }
 
 void stomp_everything() {
