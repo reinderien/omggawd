@@ -8,6 +8,36 @@
 #include <curl/curl.h>
 #include <json/json.h>
 
+void clean(char *content) {
+
+	static const char *replacements[][2] = {
+		{ "&lt;&lt;",
+		  "<<      " },
+		{ "&lt;",
+		  "<   "  },
+		{ "&gt;&gt;",
+		  ">>      " },
+		{ "&gt;",
+		  ">   "  },
+		{ "&amp;&amp;",
+		  "&&        " },
+		{ "&amp;",
+		  "&    "  }
+	};
+
+	for (int i = 0; i < sizeof(replacements)/sizeof(*replacements); i++) {
+		char *target = content;
+		for (;;) {
+			char *dest = strstr(target, replacements[i][0]);
+			if (!dest) break;
+			const char *better = replacements[i][1];
+			int len = strlen(better);
+			strncpy(dest, better, len);
+			target += len;
+		}
+	}
+}
+
 static int codeindex = 0;
 static void parseBody(char *body) {
 	static const char btag[] = "<code>", etag[] = "</code>";
@@ -21,6 +51,7 @@ static void parseBody(char *body) {
 		char *end = strstr(content, etag);
 		if (!end) break;
 		*end = '\0';
+		clean(content);
 
 		char filename[1024];
 		snprintf(filename, sizeof(filename), "code/nugget_%d.c", codeindex);
