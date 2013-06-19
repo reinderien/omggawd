@@ -136,7 +136,8 @@ static bool getCode(int page, int pagesize, const char *tag) {
 	JO_STR(has_more);
 	bool bhas_more = !strcmp("true", has_more);
 
-	printf("page %d; items %d-%d of %d; quota %d/%d (%d%%); backoff %d; %s more \n", // \r
+	printf("page %d; items %d-%d of %d; "
+		"quota %d/%d (%d%%); backoff %d; %s more \n", // \r
 		page,
 		1 + (page - 1)*pagesize, page*pagesize, total,
 		quota_remaining, quota_max, quota_remaining*100/quota_max,
@@ -165,9 +166,11 @@ static bool getCode(int page, int pagesize, const char *tag) {
 }
 
 void stomp_everything();
+void ga_init();
+void ga_destroy();
 
 int main() {
-	curl = curl_easy_init();
+	/*curl = curl_easy_init();
 	assert(curl);
 	assert(!CURLERR(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writecurl)));
 	assert(!CURLERR(curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip")));
@@ -184,7 +187,7 @@ int main() {
 
 	// testall();
 
-	// stomp_everything();
+	// stomp_everything();*/
 
 	return 0;
 }
