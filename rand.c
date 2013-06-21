@@ -122,54 +122,59 @@ void testall() {
 	test_fool();
 }
 
-void b64_out() {
-	int rbits = 0;
+void b64_out(int (*dorand)(), int index) {
+	/*int rbits = 0;
 	for (int rmax = RAND_MAX; rmax; rmax >>= 1)
 		rbits++;
 	int rbytes = rbits/8;
 
-	printf("RAND_MAX=0x%X (%d bits, %d bytes)\n", RAND_MAX, rbits, rbytes);
+	printf("RAND_MAX=0x%X (%d bits, %d bytes)\n", RAND_MAX, rbits, rbytes);*/
+	int rbytes = 3;
 	
 	// Call Gnu "base64" to put the data in stomp-able format
 	// wrap at 100 cols
-	FILE *pin = popen("base64 -w100 > will_be_stomped.txt", "w");
+	char cmd[256];
+	snprintf(cmd, sizeof(cmd), "base64 -w100 > stomped_%d.txt", index);
+	FILE *pin = popen(cmd, "w");
 	if (!pin) {
 		perror("Couldn't run base64");
 		return;
 	}
 	int fd = fileno(pin);
-		
+	
 	// 6 bits of rand -> 8 bits of base64
 	// 100 cols = x8/6; x = 75 bytes
 	// 20000 rows (so sayeth the stomper)
 	for (int x = 0; x < 75*20000; x += rbytes) {
-		int r = rand();
+		int r = dorand();
 		write(fd, &r, rbytes);
 	}
 	
 	pclose(pin);
 }
 
-double stomp() {
+double stomp(int index) {
 	// Regex to parse Stompy's entropy summary lines x2
 	regex_t rex;
 	assert(!regcomp(&rex, "level *: (.+) anomalous bits, (.+) OK",
 		REG_EXTENDED));
-		
-	int anom_alpha = -1, ok_alpha = -1, anom_bit = -1, ok_bit = -1;
-	
-	char line[1024];
 	
 	// Start Stompy and feed him some goodies
-	FILE *pout = popen("stompy/stompy -R will_be_stomped.txt", "r");
+	char cmd[256];
+	snprintf(cmd, sizeof(cmd),
+		"stompy/stompy -o /dev/null -R stomped_%d.txt", index);
+	FILE *pout = popen(cmd, "r");
 	if (!pout) {
 		perror("No stomping :(");
 		return -1;
 	}
+		
+	int anom_alpha = -1, ok_alpha = -1, anom_bit = -1, ok_bit = -1;
 	
+	char line[1024];
 	// Read and re-display Stompy output while we look for the summary
 	while (fgets(line, sizeof(line), pout)) {
-		printf("s:    %s", line);
+		// printf("s:    %s", line);
 	
 		regmatch_t matches[3];
 		int result = regexec(&rex, line, 3, matches, 0);
@@ -199,13 +204,11 @@ double stomp() {
 	
 	// Form a composite entropy score based on Stompy's reported anomalous and
 	// OK bits on both the alphabet and bit levels
-	return (ok_alpha + ok_bit) /
+	
+	double composite = (ok_alpha + ok_bit) /
 		(double)(ok_alpha + ok_bit + anom_alpha + anom_bit);
+	printf("Composite score: %.2lf%%\n", composite*100);
+	fflush(stdout);
+	return composite;
 }
 
-void stomp_everything() {
-	b64_out();
-	double q = stomp();
-	
-	printf("Composite score: %.2lf%%\n", q*100);
-}

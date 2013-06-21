@@ -165,11 +165,9 @@ static bool getCode(int page, int pagesize, const char *tag) {
 	return true;
 }
 
-void stomp_everything();
-void ga_init();
-void ga_destroy();
+void ga(int *argc, char **argv);
 
-int main() {
+int main(int argc, char **argv) {
 	/*curl = curl_easy_init();
 	assert(curl);
 	assert(!CURLERR(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writecurl)));
@@ -188,6 +186,8 @@ int main() {
 	// testall();
 
 	// stomp_everything();*/
+	
+	ga(&argc, argv);
 
 	return 0;
 }

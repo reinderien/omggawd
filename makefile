@@ -2,7 +2,7 @@ flags   = -Wall -std=c99 -D_GNU_SOURCE
 dflags  = $(flags) -O0 -ggdb
 rflags  = $(flags) -O3 -s -march=native
 cflags  = -c -I/usr/include/mpi -DWL=64
-ldflags = -lbrahe -lcurl -ljson -lpgapack-mpi1
+ldflags = -lbrahe -lcurl -ljson -lpgapack-mpi1 -lmpi
 
 objs = main rand ga
 
