@@ -1,3 +1,3 @@
 #!/bin/bash
-mpirun -np `nproc` ./omgwtf-d
+mpirun -np `nproc` ./omgwtf
 

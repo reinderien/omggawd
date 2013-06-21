@@ -147,7 +147,7 @@ void b64_out(int (*dorand)(), int index) {
 	// 20000 rows (so sayeth the stomper)
 	for (int x = 0; x < 75*20000; x += rbytes) {
 		int r = dorand();
-		write(fd, &r, rbytes);
+		assert(rbytes == write(fd, &r, rbytes));
 	}
 	
 	pclose(pin);
@@ -207,8 +207,6 @@ double stomp(int index) {
 	
 	double composite = (ok_alpha + ok_bit) /
 		(double)(ok_alpha + ok_bit + anom_alpha + anom_bit);
-	printf("Composite score: %.2lf%%\n", composite*100);
-	fflush(stdout);
 	return composite;
 }
 

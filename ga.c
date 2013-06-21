@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <pgapack-mpi/pgapack.h>
+#include <stdio.h>
 
 void b64_out(int (*dorand)(), int index);
 double stomp(int index);
@@ -18,11 +19,16 @@ static double evaluate(PGAContext *pga, int p, int pop) {
 	b    = PGAGetIntegerAllele(pga, p, pop, 1);
 	seed = PGAGetIntegerAllele(pga, p, pop, 2);
 	
-	int index;
-	MPI_Comm_rank(MPI_COMM_WORLD, &index);
+	int core;
+	MPI_Comm_rank(MPI_COMM_WORLD, &core);
 	
-	b64_out(randrand, index);
-	double fitness = stomp(index);
+	b64_out(randrand, core);
+	double fitness = stomp(core);
+	
+	printf("core %d pop %d string %d score %5.2lf%%\n",
+		core, pop, p, fitness*100);
+	fflush(stdout);
+	
 	return fitness;
 }
 
