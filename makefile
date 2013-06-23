@@ -1,3 +1,6 @@
+# Genetic Algorithm WTF Decisionator
+# (c) Greg Toombs 2013 (should I really put my name on this?)
+
 flags   = -Wall -std=c99 -D_GNU_SOURCE
 dflags  = $(flags) -O0 -ggdb
 rflags  = $(flags) -O3 -s -march=native

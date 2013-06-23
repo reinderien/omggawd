@@ -1,3 +1,8 @@
+/*
+Genetic Algorithm WTF Decisionator
+(c) Greg Toombs 2013 (should I really put my name on this?)
+*/
+
 #include <assert.h>
 #include <pgapack-mpi/pgapack.h>
 #include <stdio.h>
