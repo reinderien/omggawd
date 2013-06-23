@@ -1,0 +1,19 @@
+Genetic Algorithm WTF Decisionator
+(c) Greg Toombs 2013 (should I really put my name on this?)
+--------------------------------------------------------------------------------
+
+New Relic installation:
+server-level (see newrelic.sh)
+
+Build dependencies:
+gcc
+-lcurl         = libcurl4-openssl-dev
+-ljson         = libjson0-dev
+-lpgapack-mpi1 = libpgapack-mpi1
+-lmpi          = libopenmpi-dev
+
+Runtime dependencies:
+a browser
+an internet connection
+
+

@@ -3,3 +3,16 @@ Genetic Algorithm WTF Decisionator
 (c) Greg Toombs 2013 (should I really put my name on this?)
 */
 
+h1 {
+	margin: 20px 20px 10px 20px;
+}
+
+.subtitle {
+	font-style: italic;
+	margin: 0px 20px 30px 20px;
+}
+
+form {
+	margin: 5px 20px 10px 20px;
+}
+
