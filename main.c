@@ -245,6 +245,7 @@ void spew(const char *str) {
 
 int main(int argc, char **argv) {
 	spew("Please wait while I fetch some randomization code off of the internet.");
+	system("sensible-browser ./omgui.html &");
 
 	curl = curl_easy_init();
 	assert(curl);

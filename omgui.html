@@ -18,6 +18,22 @@
  </div>
  
  <script type="text/javascript" src="results.js"></script>
+ 
+ <div id="results">
+ 	I think that the answer is...
+ 	<script type="text/javascript">
+ 	  if (window.location.search.indexOf('=') != -1) {
+ 	    var index = Math.floor(Math.random() * awesome.length);
+ 	  	var randval = awesome[index];
+ 	  	if (randval & 1)
+	 	  	document.write('yes');
+	 	else
+	 		document.write('no');
+ 	  }
+ 	  else
+ 	  	document.getElementById('results').style.display = 'none';
+ 	</script>
+ </div>
 
  <form id="askform" method="get">
  <div>
