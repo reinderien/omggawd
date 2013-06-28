@@ -758,6 +758,13 @@ static void analyze_samples(void) {
 
     say("\n    %sTheoretical maximum entropy: %0.02f bits (%s)\n\n",
            entbits < 39 ? "WARNING: " : "", entbits, rate_random(entbits));
+           
+    if (!entbits) {
+           say("RESULTS SUMMARY:\n"
+           "  Alphabet-level : 600 anomalous bits, 0 OK (absolute crap).\n"
+           "  Bit-level      : 600 anomalous bits, 0 OK (absolute crap).\n");
+      exit(0);
+    }
 
     if (minlen[i] != maxlen[i]) 
       say("NOTE: Field length varies (%u-%u bytes), aligned LEFT. Consider manually\n"

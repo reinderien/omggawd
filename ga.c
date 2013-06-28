@@ -64,7 +64,8 @@ static double evaluate(PGAContext *pga, int p, int pop) {
 		core, pop, p, fitness*100);
 	fflush(stdout);
 	
-	if (fitness >= PGAGetMaxFitnessRank(pga)) {
+	double best = PGAGetMaxFitnessRank(pga);
+	if (fitness >= best) {
 		FILE *resultsjs = fopen("results.js", "w");
 		assert(resultsjs);
 		fprintf(resultsjs, "var fitness = %f", fitness);
