@@ -16,14 +16,35 @@
  <div class="subtitle">
   (c) Greg Toombs 2013
  </div>
+ 
+ <script type="text/javascript" src="results.js"></script>
 
- <form>
+ <form id="askform" method="get">
  <div>
-  Ask me a yes-or-no question.
+  Ask me a yes-or-no question. I've got to warn you, I'm only
+  <script type="text/javascript">
+  	if (typeof(message) != 'string')
+	  document.write(fitness * 100);
+	else
+	  document.getElementById('askform').display = 'none';
+  </script>% sure that I'll be right.
  </div>
- <input type="text" id="question"/>
+ <input type="text" name="question"/>
  <input type="submit" value="Ask"/>
  </form>
+ 
+ <div id="mess">
+ 	<script type="text/javascript">
+ 	  if (typeof(message) != 'string')
+ 	  	document.getElementById('mess').display = 'none';
+ 	  else {
+ 	  	document.write(message);
+ 	  	setTimeout(function(){
+          window.location.reload(1);
+        }, 2000);
+ 	  }
+ 	</script>
+ </div>
 </body>
 </html>
 
