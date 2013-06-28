@@ -60,7 +60,8 @@ bool compile(const char *awesomecode) {
 		"}\n", source);
 	fclose(source);
 	int result = system(
-		"gcc -o libawesome.so awesome.c -fpic -shared -nostdinc -nostdlib");
+		"gcc -o libawesome.so awesome.c -fpic -shared -nostdinc -nostdlib "
+		"2>/dev/null");
 	return !result;
 }
 
@@ -86,7 +87,14 @@ void munch(char *content) {
 			!strstr(begin, "char") &&
 			!strstr(begin, "int") &&
 			!strstr(begin, "float") &&
-			!strstr(begin, "double")) {
+			!strstr(begin, "double") &&
+			(
+				// I want stuff to be bigger
+				strstr(begin, "+") ||
+				strstr(begin, "*") ||
+				strstr(begin, "<<") ||
+				strstr(begin, "%")
+			)) {
 			for (char *word = begin;; word += match.rm_eo) {
 				result = regexec(&rexvar, word, 1, &match, 0);
 				if (result != REG_NOERROR)

@@ -63,7 +63,8 @@ static double evaluate(PGAContext *pga, int p, int pop) {
 		"}\n", source);
 	fclose(source);
 	snprintf(filename, sizeof(filename),
-		"gcc -o libawesome-%d.so awesome-%d.c -fpic -shared -nostdinc -nostdlib", core, core);
+		"gcc -o libawesome-%d.so awesome-%d.c -fpic -shared -nostdinc -nostdlib 2>/dev/null",
+		core, core);
 	//                        ^^^^^^^^^^	
 	
 	int result = system(filename);
