@@ -49,6 +49,25 @@ void clean(char *content) {
 char **munched;
 int nmunched = 0;
 
+bool compile(const char *awesomecode) {
+	FILE *source = fopen("awesome.c", "w");
+	assert(source);
+	fputs(
+		"int x = -1;\n"
+		"int awesomerand() {\n",
+		source);
+	fputs(awesomecode, source);
+	fputs(
+		"\n"
+		"return x;\n"
+		"}\n", source);
+	fclose(source);
+	int result = system(
+		"gcc -o libawesome.so awesome.c -fpic -shared -nostdinc -nostdlib");
+	return !result;
+}
+
+
 void munch(char *content) {
 	for (int i = 0;;) {
 		// i've done found me a new line
@@ -61,7 +80,13 @@ void munch(char *content) {
 		// renamed to "x"
 		regmatch_t match;
 		int result = regexec(&rexgoodline, begin, 0, 0, 0);
-		if (result == REG_NOERROR) {
+		if (result == REG_NOERROR &&
+			!strstr(begin, "for") &&
+			!strstr(begin, "while") &&
+			!strstr(begin, "char") &&
+			!strstr(begin, "int") &&
+			!strstr(begin, "float") &&
+			!strstr(begin, "double")) {
 			for (char *word = begin;; word += match.rm_eo) {
 				result = regexec(&rexvar, word, 1, &match, 0);
 				if (result != REG_NOERROR)
@@ -71,11 +96,15 @@ void munch(char *content) {
 					word[j] = ' ';
 			}
 			
-			nmunched++;
-			munched = realloc(munched, nmunched * sizeof(char*));
-			int len = strlen(begin);
-			munched[nmunched - 1] = malloc(len);
-			strcpy(munched[nmunched - 1], begin);
+			if (compile(begin)) {
+				printf("Munched '%s'\n", begin);
+			
+				nmunched++;
+				munched = realloc(munched, nmunched * sizeof(char*));
+				int len = strlen(begin);
+				munched[nmunched - 1] = malloc(len);
+				strncpy(munched[nmunched - 1], begin, len);
+			}
 		}
 		
 		if (die) return;
@@ -179,7 +208,7 @@ static bool getCode(int page, int pagesize, const char *tag) {
 	bool bhas_more = !strcmp("true", has_more);
 
 	printf("page %d; items %d-%d of %d; "
-		"quota %d/%d (%d%%); backoff %d; %s more \r",
+		"quota %d/%d (%d%%); backoff %d; %s more\n", // \r
 		page,
 		1 + (page - 1)*pagesize, page*pagesize, total,
 		quota_remaining, quota_max, quota_remaining*100/quota_max,

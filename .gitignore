@@ -1,6 +1,6 @@
 *.o
 *.out
+*.so
 *~
-code/*.c
-code/*.so
+awesome.c
 stomped*.txt
