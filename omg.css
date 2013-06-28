@@ -3,6 +3,14 @@ Genetic Algorithm WTF Decisionator
 (c) Greg Toombs 2013 (should I really put my name on this?)
 */
 
+body {
+	background-color: Beige;
+}
+
+h1 div subtitle {
+	font-family: "Georgia", serif;
+}
+
 h1 {
 	margin: 20px 20px 10px 20px;
 }
@@ -12,7 +20,7 @@ h1 {
 	margin: 0px 20px 30px 20px;
 }
 
-form {
+div, input, hr {
 	margin: 5px 20px 10px 20px;
 }
 

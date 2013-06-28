@@ -266,7 +266,7 @@ int main(int argc, char **argv) {
 		REG_EXTENDED));
 	potentials = fopen("potentials.c", "w");
 	
-	// Only use up 10 of the SO quota
+	// Only use up 50 of the SO quota that's usually 300
 	for (int p = 1; getCode(p, 10, "c") && p < 10; p++);
 
 	json_tokener_free(jtok);
