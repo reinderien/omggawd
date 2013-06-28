@@ -142,7 +142,7 @@ static bool getCode(int page, int pagesize, const char *tag) {
 	bool bhas_more = !strcmp("true", has_more);
 
 	printf("page %d; items %d-%d of %d; "
-		"quota %d/%d (%d%%); backoff %d; %s more \n", // \r
+		"quota %d/%d (%d%%); backoff %d; %s more \r",
 		page,
 		1 + (page - 1)*pagesize, page*pagesize, total,
 		quota_remaining, quota_max, quota_remaining*100/quota_max,
@@ -161,7 +161,7 @@ static bool getCode(int page, int pagesize, const char *tag) {
 		}
 	}
 
-	json_object_put(jo); // put = release
+	json_object_put(jo); // put = release, who knows why
 
 	if (!bhas_more || !quota_remaining)
 		return false;
@@ -173,7 +173,7 @@ static bool getCode(int page, int pagesize, const char *tag) {
 void ga(int *argc, char **argv);
 
 int main(int argc, char **argv) {
-	/*curl = curl_easy_init();
+	curl = curl_easy_init();
 	assert(curl);
 	assert(!CURLERR(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writecurl)));
 	assert(!CURLERR(curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip")));
@@ -181,9 +181,7 @@ int main(int argc, char **argv) {
 	jtok = json_tokener_new();
 	assert(jtok);
 
-	//for (
-	    int p = 1;
-	    getCode(p, 10, "c"); // p++);
+	for (int p = 1; getCode(p, 10, "c"); p++);
 
 	json_tokener_free(jtok);
 	curl_easy_cleanup(curl);
@@ -192,7 +190,7 @@ int main(int argc, char **argv) {
 
 	// stomp_everything();*/
 	
-	ga(&argc, argv);
+	// ga(&argc, argv);
 
 	return 0;
 }
