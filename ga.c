@@ -5,14 +5,31 @@ Genetic Algorithm WTF Decisionator
 
 #include <assert.h>
 #include <dlfcn.h>
+#include <fcntl.h>
 #include <pgapack-mpi/pgapack.h>
 #include <stdio.h>
+#include <unistd.h>
 
 void b64_out(int (*dorand)(), int index);
 double stomp(int index);
 
 char **plines = 0;
 int nlines = 0;
+
+double readbest() {
+	int fd = open("best.bin", O_RDONLY);
+	double best;
+	assert(sizeof(best) == read(fd, &best, sizeof(best)));
+	close(fd);
+	return best;
+}
+
+void writebest(double best) {
+	int fd = open("best.bin", O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR);
+	write(fd, &best, sizeof(best));
+	close(fd);
+}
+	
 
 static double evaluate(PGAContext *pga, int p, int pop) {
 	// int nlines = PGAGetStringLength(pga);
@@ -66,17 +83,21 @@ static double evaluate(PGAContext *pga, int p, int pop) {
 		core, pop, p, fitness*100);
 	fflush(stdout);
 	
-	double best = PGAGetMaxFitnessRank(pga);
-	if (fitness >= best) {
+	if (readbest() < fitness) {
+		writebest(fitness);
+		printf("Found better algo with fitness = %f\n", fitness);
+		fflush(stdout);
+		
 		FILE *resultsjs = fopen("results.js", "w");
 		assert(resultsjs);
-		fprintf(resultsjs, "var fitness = %f", fitness);
+		fprintf(resultsjs, "var fitness = %f;\n", fitness);
 		fprintf(resultsjs, "var awesome = new Array(");
 		for (int i = 0; i < 100; i++) {
 			fprintf(resultsjs, "%d", awesomerand());
 			if (i < 99)
 				fputc(',', resultsjs);
 		}
+		fputs(");", resultsjs);
 		fclose(resultsjs);
 	}
 
@@ -91,6 +112,8 @@ int main(int argc, char **argv) {
 	// Number of coordinates = number of potentials
 	// Lower and upper bounds are also the number of potentials, since
 	// they determine the order of the statements that are written to awesome.
+	
+	writebest(-1);
 	
 	FILE *potentials = fopen("potentials.c", "r");
 	plines = malloc(sizeof(char*));
