@@ -18,4 +18,8 @@ Runtime dependencies:
 a browser
 an internet connection
 
+The important things what you should do:
+  sudo ./install-deps.sh
+  make
+  ./main-r
 
