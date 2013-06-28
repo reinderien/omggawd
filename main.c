@@ -14,7 +14,7 @@ Genetic Algorithm WTF Decisionator
 #include <curl/curl.h>
 #include <json/json.h>
 
-regex_t rexgoodline, rexvar;
+regex_t rexgoodline, rexvar, rexstupid, rexsuicide;
 
 void clean(char *content) {
 	// xml is yucky
@@ -77,6 +77,8 @@ void munch(char *content) {
 		// Like magic: no loops, no control statements, and all variables are
 		// renamed to "x"
 		regmatch_t match;
+		
+		
 		int result = regexec(&rexgoodline, begin, 0, 0, 0);
 		if (result == REG_NOERROR &&
 			!strstr(begin, "for") &&
@@ -95,10 +97,14 @@ void munch(char *content) {
 			}
 			
 			if (compile(begin)) {
-				printf("Munched '%s'\n", begin);
+				bool stupid = REG_NOERROR == regexec(&rexstupid, begin, 0,0,0),
+					suicide = REG_NOERROR == regexec(&rexsuicide, begin, 0,0,0); 
+				if (!stupid && !suicide) {
+					printf("Munched '%s'\n", begin);
 			
-				fputs(begin, potentials);
-				fputc('\n', potentials);
+					fputs(begin, potentials);
+					fputc('\n', potentials);
+				}
 			}
 		}
 		
@@ -252,6 +258,10 @@ int main(int argc, char **argv) {
 	assert(!regcomp(&rexgoodline, "^[^=}{[]+=[^=}{[]+$",
 		REG_EXTENDED));
 	assert(!regcomp(&rexvar, "[_A-Za-z][_A-Za-z0-9]*",
+		REG_EXTENDED));
+	assert(!regcomp(&rexstupid, "^ *x *= *[0-9'\" ]+ *;",
+		REG_EXTENDED));
+	assert(!regcomp(&rexsuicide, "^ *x *\\^= *x *;",
 		REG_EXTENDED));
 	potentials = fopen("potentials.c", "w");
 	

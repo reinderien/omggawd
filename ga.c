@@ -21,6 +21,10 @@ static double evaluate(PGAContext *pga, int p, int pop) {
 	for (int i = 0; i < nlines; i++) {
 		order[i] = PGAGetIntegerAllele(pga, p, pop, i);
 	}
+	int *use = malloc(nlines * sizeof(int));
+	for (int i = 0; i < nlines; i++) {
+		use[i] = PGAGetIntegerAllele(pga, p, pop, i + nlines);
+	}
 	
 	int core;
 	MPI_Comm_rank(MPI_COMM_WORLD, &core);
@@ -31,12 +35,10 @@ static double evaluate(PGAContext *pga, int p, int pop) {
 	fputs("int x = -1;\n"
 		"int awesomerand() {\n",
 		source);
-	for (int noutput = 0, iorder = 0; noutput < nlines; iorder++) {
+	for (int iorder = 0; iorder < nlines; iorder++) {
 		for (int i = 0; i < nlines; i++) {
-			if (order[i] == iorder) {
+			if (use[i] && order[i] == iorder)
 				fputs(plines[i], source);
-				noutput++;
-			}
 		}
 	}
 	fputs(
@@ -109,14 +111,16 @@ int main(int argc, char **argv) {
 	MPI_Init(&argc, &argv);
 
 	PGAContext *pga = PGACreate(&argc, argv,
-		PGA_DATATYPE_INTEGER, nlines, PGA_MAXIMIZE);
+		PGA_DATATYPE_INTEGER, 2*nlines, PGA_MAXIMIZE);
 	assert(pga);
 	
-	int *l = malloc(nlines * sizeof(int)),
-		*u = malloc(nlines * sizeof(int));
+	int *l = malloc(2*nlines * sizeof(int)),
+		*u = malloc(2*nlines * sizeof(int));
 	for (int i = 0; i < nlines; i++) {
 		l[i] = 0;
 		u[i] = nlines - 1;
+		l[i + nlines] = 0;
+		u[i + nlines] = 1;
 	}
 	PGASetIntegerInitRange(pga, l, u);
 	PGASetMaxGAIterValue(pga, heatdeathoftheuniverse);
