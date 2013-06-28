@@ -44,10 +44,11 @@ static double evaluate(PGAContext *pga, int p, int pop) {
 		"}\n", source);
 	fclose(source);
 	snprintf(filename, sizeof(filename),
-		"gcc -o libawesome-%d.so awesome-%d.c -fpic -shared -nostdinc -nostdlib",
-		core, core);
+		"gcc -o libawesome-%d.so awesome-%d.c -fpic -shared -nostdinc -nostdlib", core, core);
+	//                        ^^^^^^^^^^	
+	
 	int result = system(filename);
-	if (result) return -1; // the stupid thing didn't compile
+	if (result) return -1; // the stupid thing didn't compile. not so awesome.
 	
 	snprintf(filename, sizeof(filename), "./libawesome-%d.so", core);
 	void *lib = dlopen(filename, RTLD_NOW);
@@ -56,14 +57,27 @@ static double evaluate(PGAContext *pga, int p, int pop) {
 	assert(awesomerand);
 	
 	b64_out(awesomerand, core);
-	
-	dlclose(lib);
-	
+		
 	double fitness = stomp(core);
 	
 	printf("core %d pop %d string %d score %5.2lf%%\n",
 		core, pop, p, fitness*100);
 	fflush(stdout);
+	
+	if (fitness >= PGAGetMaxFitnessRank(pga)) {
+		FILE *resultsjs = fopen("results.js", "w");
+		assert(resultsjs);
+		fprintf(resultsjs, "var fitness = %f", fitness);
+		fprintf(resultsjs, "var awesome = new Array(");
+		for (int i = 0; i < 100; i++) {
+			fprintf(resultsjs, "%d", awesomerand());
+			if (i < 99)
+				fputc(',', resultsjs);
+		}
+		fclose(resultsjs);
+	}
+
+	dlclose(lib);
 	
 	return fitness;
 }

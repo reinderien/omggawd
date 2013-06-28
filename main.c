@@ -231,7 +231,15 @@ static bool getCode(int page, int pagesize, const char *tag) {
 	return true;
 }
 
+void spew(const char *str) {
+	FILE *resultsjs = fopen("results.js", "w");
+	fprintf(resultsjs, "var message = '%s';", str);
+	fclose(resultsjs);
+}
+
 int main(int argc, char **argv) {
+	spew("Please wait while I fetch some randomization code off of the internet.");
+
 	curl = curl_easy_init();
 	assert(curl);
 	assert(!CURLERR(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writecurl)));
@@ -253,6 +261,8 @@ int main(int argc, char **argv) {
 	json_tokener_free(jtok);
 	curl_easy_cleanup(curl);
 	fclose(potentials);
+	
+	spew("Okay, I have some code. Please wait while I get ready for your question.");
 	
 	// Potentials file is filled, so now we set the processor on fire
 	return system("mpirun -np `nproc` ./ga-r");
