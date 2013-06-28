@@ -5,6 +5,7 @@ Genetic Algorithm WTF Decisionator
 
 #include <assert.h>
 #include <fcntl.h>
+#include <regex.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -13,8 +14,10 @@ Genetic Algorithm WTF Decisionator
 #include <curl/curl.h>
 #include <json/json.h>
 
-void clean(char *content) {
+regex_t rexgoodline, rexvar;
 
+void clean(char *content) {
+	// xml is yucky
 	static const char *replacements[][2] = {
 		{ "&lt;&lt;",
 		  "<<      " },
@@ -43,6 +46,46 @@ void clean(char *content) {
 	}
 }
 
+char **munched;
+int nmunched = 0;
+
+void munch(char *content) {
+	for (int i = 0;;) {
+		// i've done found me a new line
+		char *begin = content + i;
+		while (content[i] >= ' ') i++;
+		bool die = !content[i];
+		content[i] = 0;
+		
+		// Like magic: no loops, no control statements, and all variables are
+		// renamed to "x"
+		regmatch_t match;
+		int result = regexec(&rexgoodline, begin, 0, 0, 0);
+		if (result == REG_NOERROR) {
+			for (char *word = begin;; word += match.rm_eo) {
+				result = regexec(&rexvar, word, 1, &match, 0);
+				if (result != REG_NOERROR)
+					break;
+				word[match.rm_so] = 'x';
+				for (int j = match.rm_so + 1; j < match.rm_eo; j++)
+					word[j] = ' ';
+			}
+			
+			nmunched++;
+			munched = realloc(munched, nmunched * sizeof(char*));
+			int len = strlen(begin);
+			munched[nmunched - 1] = malloc(len);
+			strcpy(munched[nmunched - 1], begin);
+		}
+		
+		if (die) return;
+		
+		while (content[++i] < ' ') {
+			if (!content[i]) return;
+		}
+	}
+}
+
 static int codeindex = 0;
 static void parseBody(char *body) {
 	static const char btag[] = "<code>", etag[] = "</code>";
@@ -57,13 +100,7 @@ static void parseBody(char *body) {
 		if (!end) break;
 		*end = '\0';
 		clean(content);
-
-		char filename[1024];
-		snprintf(filename, sizeof(filename), "code/nugget_%d.c", codeindex);
-		FILE *nug = fopen(filename, "w");
-		assert(nug);
-		fputs(content, nug);
-		fclose(nug);
+		munch(content);
 
 		body = end + sizeof(etag) - 1;
 	}
@@ -180,6 +217,15 @@ int main(int argc, char **argv) {
 
 	jtok = json_tokener_new();
 	assert(jtok);
+	
+	
+	assert(!regcomp(&rexgoodline, "^[^=}{[]+=[^=}{[]+$",
+		REG_EXTENDED));
+	assert(!regcomp(&rexvar, "[_A-Za-z][_A-Za-z0-9]*",
+		REG_EXTENDED));
+	munched = malloc(sizeof(char*));
+	
+	// puts(regexec(&rexgoodline, "FILE *foo = fopen(\"h\");", 0, 0, 0) == REG_NOERROR ? "no error" : "bad");
 
 	for (int p = 1; getCode(p, 10, "c"); p++);
 

@@ -4,12 +4,9 @@ Genetic Algorithm WTF Decisionator
 */
 
 #include <assert.h>
-#include <math.h>
 #include <regex.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <unistd.h>
 
 void b64_out(int (*dorand)(), int index) {
