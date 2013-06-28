@@ -253,6 +253,7 @@ int main(int argc, char **argv) {
 	json_tokener_free(jtok);
 	curl_easy_cleanup(curl);
 	fclose(potentials);
-
-	return 0;
+	
+	// Potentials file is filled, so now we set the processor on fire
+	return system("mpirun -np `nproc` ./ga-r");
 }

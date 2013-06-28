@@ -5,18 +5,19 @@ flags   = -Wall -std=c99 -D_GNU_SOURCE
 dflags  = $(flags) -O0 -ggdb
 rflags  = $(flags) -O3 -s -march=native
 cflags  = -c -I/usr/include/mpi -DWL=64
-ldflags = -lcurl -ljson -lpgapack-mpi1 -lmpi -lm
+mainlibs = -lcurl -ljson
+galibs   = -lpgapack-mpi1 -lmpi -lm -ldl
 
 all: main-r ga-r
 
 main-r: main-r.o
-	gcc -o $@ $^ $(ldflags) $(rflags)
+	gcc -o $@ $^ $(mainlibs) $(rflags)
 main-d: main-d.o
-	gcc -o $@ $^ $(ldflags) $(dflags)
+	gcc -o $@ $^ $(mainlibs) $(dflags)
 ga-r: ga-r.o rand-r.o
-	gcc -o $@ $^ $(ldflags) $(rflags)
+	gcc -o $@ $^ $(galibs) $(rflags)
 ga-d: ga-d.o rand-d.o
-	gcc -o $@ $^ $(ldflags) $(dflags)
+	gcc -o $@ $^ $(galibs) $(dflags)
 
 %-r.o: %.c makefile
 	gcc -o $@ $< $(cflags) $(rflags)

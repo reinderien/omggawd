@@ -4,30 +4,62 @@ Genetic Algorithm WTF Decisionator
 */
 
 #include <assert.h>
+#include <dlfcn.h>
 #include <pgapack-mpi/pgapack.h>
 #include <stdio.h>
 
 void b64_out(int (*dorand)(), int index);
 double stomp(int index);
 
-int seed, m, b;
-
-static int randrand() {
-	seed = m*seed + b;
-	return seed & 0xFFFFFF;
-}
+char **plines = 0;
+int nlines = 0;
 
 static double evaluate(PGAContext *pga, int p, int pop) {
-	// int len = PGAGetStringLength(pga);
+	// int nlines = PGAGetStringLength(pga);
 	
-	m    = PGAGetIntegerAllele(pga, p, pop, 0),
-	b    = PGAGetIntegerAllele(pga, p, pop, 1);
-	seed = PGAGetIntegerAllele(pga, p, pop, 2);
+	int *order = malloc(nlines * sizeof(int));
+	for (int i = 0; i < nlines; i++) {
+		order[i] = PGAGetIntegerAllele(pga, p, pop, i);
+	}
 	
 	int core;
 	MPI_Comm_rank(MPI_COMM_WORLD, &core);
 	
-	b64_out(randrand, core);
+	char filename[1024];
+	snprintf(filename, sizeof(filename), "awesome-%d.c", core);
+	FILE *source = fopen(filename, "w");
+	fputs("int x = -1;\n"
+		"int awesomerand() {\n",
+		source);
+	for (int noutput = 0, iorder = 0; noutput < nlines; iorder++) {
+		for (int i = 0; i < nlines; i++) {
+			if (order[i] >= iorder) {
+				fputs(plines[i], source);
+				fputc('\n', source);
+				noutput++;
+			}
+		}
+	}
+	fputs(
+		"return x;\n"
+		"}\n", source);
+	fclose(source);
+	snprintf(filename, sizeof(filename),
+		"gcc -o libawesome-%d.so awesome-%d.c -fpic -shared -nostdinc -nostdlib",
+		core, core);
+	int result = system(filename);
+	if (result) return -1; // the stupid thing didn't compile
+	
+	snprintf(filename, sizeof(filename), "./libawesome-%d.so", core);
+	void *lib = dlopen(filename, RTLD_NOW);
+	assert(lib);
+	int (*awesomerand)() = dlsym(lib, "awesomerand");
+	assert(awesomerand);
+	
+	b64_out(awesomerand, core);
+	
+	dlclose(lib);
+	
 	double fitness = stomp(core);
 	
 	printf("core %d pop %d string %d score %5.2lf%%\n",
@@ -37,18 +69,39 @@ static double evaluate(PGAContext *pga, int p, int pop) {
 	return fitness;
 }
 
+int heatdeathoftheuniverse = 99999;
+
 int main(int argc, char **argv) {
+	// Number of coordinates = number of potentials
+	// Lower and upper bounds are also the number of potentials, since
+	// they determine the order of the statements that are written to awesome.
+	
+	FILE *potentials = fopen("potentials.c", "r");
+	plines = malloc(sizeof(char*));
+	for (;;) {
+		int nbuffer = 1024;
+		char *buffer = malloc(nbuffer);
+		if (!fgets(buffer, nbuffer, potentials)) {
+			free(buffer);
+			break;
+		}
+		nlines++;
+		plines = realloc(plines, nlines*sizeof(char*));
+		assert(plines);
+		plines[nlines - 1] = buffer;
+	}
+	fclose(potentials);
+
 	MPI_Init(&argc, &argv);
 
-	#define ncoords 3
 	PGAContext *pga = PGACreate(&argc, argv,
-		PGA_DATATYPE_INTEGER, ncoords, PGA_MAXIMIZE);
+		PGA_DATATYPE_INTEGER, nlines, PGA_MAXIMIZE);
 	assert(pga);
 	
-	int l[ncoords] = { 0, 0, 0 },
-	    u[ncoords] = { 0xFFFFFF, 0xFFFFFF, 0xFFFFFF };
+	int *l = malloc(nlines * sizeof(int)),
+		*u = malloc(nlines * sizeof(int));
 	PGASetIntegerInitRange(pga, l, u);
-	PGASetMaxGAIterValue(pga, 100);
+	PGASetMaxGAIterValue(pga, heatdeathoftheuniverse);
 	PGASetUp(pga);
 	PGARun(pga, evaluate);
 	PGADestroy(pga);
