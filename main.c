@@ -46,9 +46,6 @@ void clean(char *content) {
 	}
 }
 
-char **munched;
-int nmunched = 0;
-
 bool compile(const char *awesomecode) {
 	FILE *source = fopen("awesome.c", "w");
 	assert(source);
@@ -67,6 +64,7 @@ bool compile(const char *awesomecode) {
 	return !result;
 }
 
+FILE *potentials;
 
 void munch(char *content) {
 	for (int i = 0;;) {
@@ -99,11 +97,8 @@ void munch(char *content) {
 			if (compile(begin)) {
 				printf("Munched '%s'\n", begin);
 			
-				nmunched++;
-				munched = realloc(munched, nmunched * sizeof(char*));
-				int len = strlen(begin);
-				munched[nmunched - 1] = malloc(len);
-				strncpy(munched[nmunched - 1], begin, len);
+				fputs(begin, potentials);
+				fputc('\n', potentials);
 			}
 		}
 		
@@ -236,8 +231,6 @@ static bool getCode(int page, int pagesize, const char *tag) {
 	return true;
 }
 
-void ga(int *argc, char **argv);
-
 int main(int argc, char **argv) {
 	curl = curl_easy_init();
 	assert(curl);
@@ -252,20 +245,14 @@ int main(int argc, char **argv) {
 		REG_EXTENDED));
 	assert(!regcomp(&rexvar, "[_A-Za-z][_A-Za-z0-9]*",
 		REG_EXTENDED));
-	munched = malloc(sizeof(char*));
+	potentials = fopen("potentials.c", "w");
 	
-	// puts(regexec(&rexgoodline, "FILE *foo = fopen(\"h\");", 0, 0, 0) == REG_NOERROR ? "no error" : "bad");
-
-	for (int p = 1; getCode(p, 10, "c"); p++);
+	// Only use up 10 of the SO quota
+	for (int p = 1; getCode(p, 10, "c") && p < 10; p++);
 
 	json_tokener_free(jtok);
 	curl_easy_cleanup(curl);
-
-	// testall();
-
-	// stomp_everything();*/
-	
-	// ga(&argc, argv);
+	fclose(potentials);
 
 	return 0;
 }

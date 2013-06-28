@@ -7,13 +7,15 @@ rflags  = $(flags) -O3 -s -march=native
 cflags  = -c -I/usr/include/mpi -DWL=64
 ldflags = -lcurl -ljson -lpgapack-mpi1 -lmpi -lm
 
-objs = main rand ga
+all: main-r ga-r
 
-all: omgwtf
-
-omgwtf: $(objs:%=%-r.o)
+main-r: main-r.o
 	gcc -o $@ $^ $(ldflags) $(rflags)
-omgwtf-d: $(objs:%=%-d.o)
+main-d: main-d.o
+	gcc -o $@ $^ $(ldflags) $(dflags)
+ga-r: ga-r.o rand-r.o
+	gcc -o $@ $^ $(ldflags) $(rflags)
+ga-d: ga-d.o rand-d.o
 	gcc -o $@ $^ $(ldflags) $(dflags)
 
 %-r.o: %.c makefile
@@ -22,6 +24,5 @@ omgwtf-d: $(objs:%=%-d.o)
 	gcc -o $@ $< $(cflags) $(dflags)
 
 clean:
-	rm -f omgwtf* *.o *~ stomped*
-	rm -rf code
+	rm -f *-r *-d *.so *.o *~ stomped* awesome.c potentials.c
 

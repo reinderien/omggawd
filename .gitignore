@@ -2,5 +2,8 @@
 *.out
 *.so
 *~
+*-r
+*-d
 awesome.c
-stomped*.txt
+potentials.c
+stomped*

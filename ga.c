@@ -37,11 +37,11 @@ static double evaluate(PGAContext *pga, int p, int pop) {
 	return fitness;
 }
 
-void ga(int *argc, char **argv) {
-	MPI_Init(argc, &argv);
+int main(int argc, char **argv) {
+	MPI_Init(&argc, &argv);
 
 	#define ncoords 3
-	PGAContext *pga = PGACreate(argc, argv,
+	PGAContext *pga = PGACreate(&argc, argv,
 		PGA_DATATYPE_INTEGER, ncoords, PGA_MAXIMIZE);
 	assert(pga);
 	
