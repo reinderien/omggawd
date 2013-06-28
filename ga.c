@@ -33,9 +33,8 @@ static double evaluate(PGAContext *pga, int p, int pop) {
 		source);
 	for (int noutput = 0, iorder = 0; noutput < nlines; iorder++) {
 		for (int i = 0; i < nlines; i++) {
-			if (order[i] >= iorder) {
+			if (order[i] == iorder) {
 				fputs(plines[i], source);
-				fputc('\n', source);
 				noutput++;
 			}
 		}
@@ -100,6 +99,10 @@ int main(int argc, char **argv) {
 	
 	int *l = malloc(nlines * sizeof(int)),
 		*u = malloc(nlines * sizeof(int));
+	for (int i = 0; i < nlines; i++) {
+		l[i] = 0;
+		u[i] = nlines - 1;
+	}
 	PGASetIntegerInitRange(pga, l, u);
 	PGASetMaxGAIterValue(pga, heatdeathoftheuniverse);
 	PGASetUp(pga);
