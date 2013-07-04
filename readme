@@ -20,6 +20,11 @@ an internet connection
 
 The important things what you should do:
   sudo ./install-deps.sh
+  
+  cd stompy
+  make
+  cd ..
+  
   make
   ./main-r
 
