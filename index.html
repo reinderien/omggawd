@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+
+    <title>omggawd by reinderien</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>omggawd</h1>
+        <h2>The Genetic Algorithm WTF Decisionator</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/reinderien/omggawd/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/reinderien/omggawd/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/reinderien/omggawd" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <p>(c) Greg Toombs 2013 (should I really put my name on this?)</p>
+
+<hr><h2>
+<a name="new-relic-installation" class="anchor" href="#new-relic-installation"><span class="octicon octicon-link"></span></a>New Relic installation</h2>
+
+<p>server-level (see newrelic.sh)</p>
+
+<h2>
+<a name="build-dependencies" class="anchor" href="#build-dependencies"><span class="octicon octicon-link"></span></a>Build dependencies</h2>
+
+<pre><code>Ubuntu (only tested on Ubuntu 13.04)
+gcc
+-lcurl         = libcurl4-openssl-dev
+-ljson         = libjson0-dev
+-lpgapack-mpi1 = libpgapack-mpi1
+-lmpi          = libopenmpi-dev
+(see install-deps.sh)
+</code></pre>
+
+<h2>
+<a name="runtime-dependencies" class="anchor" href="#runtime-dependencies"><span class="octicon octicon-link"></span></a>Runtime dependencies</h2>
+
+<ul>
+<li>a browser</li>
+<li>an internet connection</li>
+</ul><h2>
+<a name="the-important-things-what-you-should-do" class="anchor" href="#the-important-things-what-you-should-do"><span class="octicon octicon-link"></span></a>The important things what you should do</h2>
+
+<pre><code>  sudo ./install-deps.sh
+
+  cd stompy
+  make
+  cd ..
+
+  make
+  ./main-r
+</code></pre>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
